@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediBook CI — Prise de rendez-vous</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1D9E75;--green-light:#E1F5EE;--green-dark:#085041;
+  --teal:#0F6E56;--teal-light:#9FE1CB;
+  --gray:#888780;--gray-light:#F1EFE8;--gray-mid:#D3D1C7;
+  --orange:#EA580C;--orange-light:#FFF7ED;
+  --blue:#185FA5;--blue-light:#E6F1FB;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --red:#A32D2D;--red-light:#FCEBEB;
+  --text:#2C2C2A;--muted:#5F5E5A;
+  --border:#D3D1C7;--bg:#F4F4F0;--white:#FFFFFF;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+h1,h2,h3,.logo-text,.doc-name,.cal-title,.page-title,.success-title,.admin-title{font-family:'Syne',sans-serif;}
+
+/* ===== NAV ===== */
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:60px;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:34px;height:34px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.logo-mark i{color:#fff;font-size:17px;}
+.logo-text{font-size:20px;color:var(--text);}
+.logo-text span{color:var(--green);}
+.nav-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.nav-badge{font-size:12px;background:var(--green-light);color:var(--green-dark);padding:4px 10px;border-radius:20px;font-weight:500;}
+.btn-admin{background:var(--text);color:#fff;border:none;padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+.btn-admin:hover{background:#444441;}
+
+/* ===== LAYOUT ===== */
+.container{max-width:900px;margin:0 auto;padding:28px 20px;}
+
+/* ===== VIEWS ===== */
+.view{display:none;}
+.view.active{display:block;}
+
+/* ===== HERO ===== */
+.hero{background:var(--green-dark);border-radius:16px;padding:32px;margin-bottom:28px;color:#fff;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);}
+.hero::after{content:'';position:absolute;right:40px;bottom:-60px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.05);}
+.hero h1{font-size:26px;margin-bottom:6px;}
+.hero p{font-size:14px;opacity:.8;max-width:420px;}
+.hero-stats{display:flex;gap:24px;margin-top:20px;}
+.hero-stat{text-align:center;}
+.hero-stat strong{display:block;font-size:22px;font-family:'Syne',sans-serif;}
+.hero-stat span{font-size:12px;opacity:.7;}
+
+/* ===== SEARCH / FILTERS ===== */
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-box{flex:1;min-width:220px;position:relative;}
+.search-box input{width:100%;padding:10px 12px 10px 38px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--white);color:var(--text);outline:none;}
+.search-box input:focus{border-color:var(--green);}
+.search-box i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:16px;}
+.filter-select{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--white);color:var(--text);cursor:pointer;outline:none;}
+.filter-select:focus{border-color:var(--green);}
+
+/* ===== DOCTOR CARDS ===== */
+.doctors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.doctor-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .2s;position:relative;}
+.doctor-card:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 4px 16px rgba(29,158,117,.12);}
+.doc-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;}
+.doc-name{font-size:15px;margin-bottom:2px;}
+.doc-spec{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.doc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.tag{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--green-light);color:var(--green-dark);}
+.tag.orange{background:var(--orange-light);color:var(--orange);}
+.tag.blue{background:var(--blue-light);color:var(--blue);}
+.doc-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--gray-light);}
+.doc-rating{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.badge-dispo{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500;}
+.badge-dispo.yes{background:var(--green);color:#fff;}
+.badge-dispo.no{background:var(--gray-light);color:var(--gray);}
+.doc-price{font-size:12px;background:var(--amber-light);color:var(--amber);padding:3px 8px;border-radius:20px;font-weight:500;}
+
+/* ===== BOOKING FLOW ===== */
+.booking-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.btn-back{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-back:hover{background:var(--gray-light);}
+.page-title{font-size:22px;}
+
+.steps-bar{display:flex;align-items:center;margin-bottom:28px;background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:0 16px;}
+.step-item{flex:1;display:flex;align-items:center;gap:8px;padding:14px 0;font-size:13px;color:var(--gray);position:relative;}
+.step-item:not(:last-child)::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:24px;background:var(--border);}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--gray-light);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-item.active{color:var(--green);font-weight:500;}
+.step-item.active .step-num{background:var(--green);color:#fff;}
+.step-item.done{color:var(--teal);}
+.step-item.done .step-num{background:var(--teal-light);color:var(--teal);}
+
+.booking-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+@media(max-width:700px){.booking-grid{grid-template-columns:1fr;}}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+
+/* RECAP SIDEBAR */
+.sidebar-recap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:sticky;top:80px;}
+.sidebar-title{font-family:'Syne',sans-serif;font-size:14px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--gray-light);}
+.recap-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--muted);}
+.recap-row strong{color:var(--text);}
+.recap-doc{display:flex;gap:10px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--gray-light);}
+.recap-doc-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;flex-shrink:0;}
+.recap-total{background:var(--green-light);border-radius:var(--radius-sm);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+.recap-total-label{font-size:13px;color:var(--green-dark);}
+.recap-total-amount{font-family:'Syne',sans-serif;font-size:18px;color:var(--green-dark);}
+
+/* CALENDAR */
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.cal-title{font-size:16px;}
+.cal-nav-btn{background:var(--gray-light);border:none;border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.cal-nav-btn:hover{background:var(--green-light);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;}
+.cal-day-lbl{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}
+.cal-day{text-align:center;padding:8px 0;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+.cal-day.empty,.cal-day.past{color:var(--border);cursor:default;}
+.cal-day.available{background:var(--green-light);color:var(--green-dark);font-weight:500;}
+.cal-day.available:hover{background:var(--teal-light);}
+.cal-day.selected{background:var(--green);color:#fff;}
+.cal-day.today{border-color:var(--green);color:var(--green);font-weight:600;}
+.cal-day.today.selected{color:#fff;}
+.cal-day.full{background:var(--gray-light);color:var(--gray);cursor:not-allowed;}
+
+.legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:16px;}
+.ldot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
+
+.section-lbl{font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.slots-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
+.slot{padding:9px;text-align:center;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:13px;cursor:pointer;transition:all .15s;background:var(--white);}
+.slot:hover{border-color:var(--green);color:var(--green);}
+.slot.selected{background:var(--green);color:#fff;border-color:var(--green);}
+.slot.full{background:var(--gray-light);color:var(--border);cursor:not-allowed;border-color:transparent;font-size:11px;}
+
+/* FORM */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:13px;font-weight:500;margin-bottom:6px;display:block;color:var(--muted);}
+.form-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;color:var(--text);background:var(--white);transition:border-color .15s;outline:none;}
+.form-input:focus{border-color:var(--green);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:500px){.form-row{grid-template-columns:1fr;}}
+textarea.form-input{resize:vertical;min-height:80px;}
+
+/* PAYMENT */
+.pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.pay-card{border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;text-align:center;background:var(--white);}
+.pay-card:hover{border-color:var(--green);}
+.pay-card.selected{border:2px solid var(--green);background:var(--green-light);}
+.pay-icon{font-size:28px;margin-bottom:8px;}
+.pay-name{font-size:14px;font-weight:500;}
+.pay-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.pay-ussd{font-size:11px;background:var(--gray-light);color:var(--muted);padding:2px 8px;border-radius:20px;margin-top:5px;display:inline-block;}
+.phone-row{display:flex;gap:8px;}
+.prefix{padding:10px 12px;background:var(--gray-light);border-radius:var(--radius-sm);font-size:14px;font-weight:500;white-space:nowrap;}
+.info-banner{background:var(--orange-light);border:1px solid #FED7AA;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#9A3412;margin-bottom:16px;display:flex;gap:8px;align-items:flex-start;}
+.sms-note{background:var(--blue-light);border:1px solid #B5D4F4;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--blue);margin-bottom:16px;display:flex;gap:8px;align-items:flex-start;}
+
+/* BUTTONS */
+.btn-primary{width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary:hover{background:var(--green-dark);}
+.btn-primary:disabled{background:var(--border);cursor:not-allowed;}
+.btn-secondary{width:100%;padding:10px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-family:inherit;margin-bottom:10px;}
+.btn-secondary:hover{background:var(--gray-light);}
+
+/* SUCCESS */
+.success-wrap{max-width:520px;margin:0 auto;text-align:center;padding:40px 20px;}
+.success-icon{width:80px;height:80px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);}
+.success-icon i{color:#fff;font-size:40px;}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-size:26px;margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
+.confirm-card{background:var(--green-light);border:1px solid var(--teal-light);border-radius:var(--radius);padding:18px;text-align:left;margin-bottom:20px;}
+.confirm-row{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:14px;border-bottom:1px solid var(--teal-light);}
+.confirm-row:last-child{border:none;}
+.confirm-row i{color:var(--green);font-size:17px;width:22px;}
+.ref-box{text-align:center;margin-bottom:28px;}
+.ref-label{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.ref-code{font-family:monospace;background:var(--white);border:1px solid var(--teal-light);padding:10px 20px;border-radius:8px;font-size:18px;letter-spacing:.15em;color:var(--green-dark);display:inline-block;}
+
+/* ===== ADMIN ===== */
+.admin-wrap{max-width:900px;margin:0 auto;padding:28px 20px;}
+.admin-header{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.admin-title{font-size:24px;}
+.btn-logout{background:var(--red-light);color:var(--red);border:1px solid #F7C1C1;border-radius:var(--radius-sm);padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr;}}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;color:var(--text);}
+.stat-value.green{color:var(--green-dark);}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+@media(max-width:700px){.admin-grid{grid-template-columns:1fr;}}
+
+.admin-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.admin-card-title{font-family:'Syne',sans-serif;font-size:15px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--gray-light);display:flex;align-items:center;gap:8px;}
+
+.rdv-list{display:flex;flex-direction:column;gap:10px;}
+.rdv-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);}
+.rdv-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.rdv-info{flex:1;}
+.rdv-name{font-size:13px;font-weight:500;}
+.rdv-detail{font-size:11px;color:var(--muted);}
+.rdv-status{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;}
+.rdv-status.paid{background:var(--green-light);color:var(--green-dark);}
+.rdv-status.pending{background:var(--amber-light);color:var(--amber);}
+
+.doctor-admin-list{display:flex;flex-direction:column;gap:10px;}
+.doc-admin-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);}
+.doc-admin-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+.doc-admin-info{flex:1;}
+.doc-admin-name{font-size:13px;font-weight:500;}
+.doc-admin-spec{font-size:11px;color:var(--muted);}
+.toggle-wrap{display:flex;align-items:center;gap:6px;}
+.toggle{position:relative;width:36px;height:20px;}
+.toggle input{opacity:0;width:0;height:0;}
+.slider-tog{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:20px;transition:.3s;}
+.slider-tog::before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle input:checked + .slider-tog{background:var(--green);}
+.toggle input:checked + .slider-tog::before{transform:translateX(16px);}
+
+.revenue-bars{display:flex;flex-direction:column;gap:8px;}
+.rev-row{display:flex;align-items:center;gap:10px;}
+.rev-label{font-size:12px;color:var(--muted);width:120px;flex-shrink:0;}
+.rev-bar-wrap{flex:1;background:var(--gray-light);border-radius:20px;height:10px;overflow:hidden;}
+.rev-bar{height:100%;background:var(--green);border-radius:20px;transition:width .5s;}
+.rev-amount{font-size:12px;font-weight:500;color:var(--green-dark);width:70px;text-align:right;}
+
+.sms-config{display:flex;flex-direction:column;gap:10px;}
+.sms-field{display:flex;flex-direction:column;gap:4px;}
+.sms-field label{font-size:12px;color:var(--muted);}
+.sms-field input{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;outline:none;}
+.sms-field input:focus{border-color:var(--green);}
+.btn-save-sms{background:var(--green);color:#fff;border:none;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;align-self:flex-start;}
+.btn-save-sms:hover{background:var(--green-dark);}
+
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:36px;width:100%;max-width:380px;text-align:center;}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;}
+.login-title{font-size:18px;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.login-err{background:var(--red-light);color:var(--red);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;margin-bottom:12px;display:none;}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;z-index:999;display:none;}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--green-light);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div style="text-align:center">
+    <div class="loading-spinner" style="margin:0 auto 14px"></div>
+    <p style="font-size:14px;color:var(--muted)" id="loading-msg">Traitement en cours...</p>
+  </div>
+</div>
+
+<!-- ===== NAV ===== -->
+<nav class="nav" id="main-nav">
+  <div class="logo">
+    <div class="logo-mark"><i class="ti ti-stethoscope"></i></div>
+    <div class="logo-text">Medi<span>Book</span> CI</div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge"><i class="ti ti-map-pin"></i> Bouaké</span>
+    <button class="btn-admin" onclick="showLogin()"><i class="ti ti-shield"></i> Admin</button>
+  </div>
+</nav>
+
+<!-- ===== LOGIN ADMIN ===== -->
+<div class="login-wrap view" id="view-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-mark"><i class="ti ti-stethoscope"></i></div>
+      <div class="logo-text">Medi<span>Book</span> CI</div>
+    </div>
+    <div class="login-title">Espace Administrateur</div>
+    <div class="login-sub">Connectez-vous pour gérer la plateforme</div>
+    <div class="login-err" id="login-err">Identifiants incorrects. Réessayez.</div>
+    <div class="form-group" style="text-align:left">
+      <label class="form-label">Identifiant</label>
+      <input class="form-input" type="text" id="login-user" placeholder="admin"/>
+    </div>
+    <div class="form-group" style="text-align:left">
+      <label class="form-label">Mot de passe</label>
+      <input class="form-input" type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-primary" onclick="doLogin()"><i class="ti ti-login"></i> Se connecter</button>
+    <p style="font-size:12px;color:var(--muted);margin-top:14px">Démo : admin / medibook2024</p>
+    <button class="btn-secondary" onclick="showView('view-home')" style="margin-top:10px">← Retour au site</button>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="view" id="view-admin">
+  <nav class="nav">
+    <div class="logo">
+      <div class="logo-mark"><i class="ti ti-stethoscope"></i></div>
+      <div class="logo-text">Medi<span>Book</span> CI</div>
+    </div>
+    <div class="nav-right">
+      <span style="font-size:13px;color:var(--muted)">Admin connecté</span>
+      <button class="btn-logout" onclick="showView('view-home')"><i class="ti ti-logout"></i> Déconnexion</button>
+    </div>
+  </nav>
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <div>
+        <div class="admin-title">Tableau de bord</div>
+        <p style="font-size:13px;color:var(--muted)">Bienvenue — MediBook CI Bouaké</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-calendar-check"></i> Rendez-vous aujourd'hui</div>
+        <div class="stat-value green" id="stat-rdv-today">0</div>
+        <div class="stat-sub">Total confirmés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-coin"></i> Revenus (FCFA)</div>
+        <div class="stat-value green" id="stat-revenus">0</div>
+        <div class="stat-sub">@ 100 FCFA / RDV</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-users"></i> Patients inscrits</div>
+        <div class="stat-value" id="stat-patients">0</div>
+        <div class="stat-sub">Tous RDV confondus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-stethoscope"></i> Médecins actifs</div>
+        <div class="stat-value">5</div>
+        <div class="stat-sub">Sur la plateforme</div>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- DERNIERS RDV -->
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-list-check" style="color:var(--green)"></i> Derniers rendez-vous</div>
+        <div class="rdv-list" id="admin-rdv-list">
+          <p style="font-size:13px;color:var(--muted);text-align:center;padding:20px 0">Aucun rendez-vous pour l'instant.</p>
+        </div>
+      </div>
+
+      <!-- MÉDECINS GESTION -->
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-user-check" style="color:var(--green)"></i> Gestion des médecins</div>
+        <div class="doctor-admin-list" id="admin-doc-list"></div>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- REVENUS PAR MÉDECIN -->
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-chart-bar" style="color:var(--green)"></i> Revenus par médecin</div>
+        <div class="revenue-bars" id="revenue-bars"></div>
+      </div>
+
+      <!-- CONFIG SMS -->
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-message" style="color:var(--green)"></i> Configuration SMS</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Intégration CinetPay SMS pour les confirmations automatiques</p>
+        <div class="sms-config">
+          <div class="sms-field">
+            <label>CinetPay API Key</label>
+            <input type="text" id="sms-apikey" placeholder="votre_api_key_cinetpay" value="demo_key_xxxxx"/>
+          </div>
+          <div class="sms-field">
+            <label>Expéditeur SMS (11 car. max)</label>
+            <input type="text" id="sms-sender" placeholder="MediBookCI" value="MediBookCI" maxlength="11"/>
+          </div>
+          <div class="sms-field">
+            <label>Message de confirmation (variables: {NOM}, {DATE}, {HEURE}, {REF})</label>
+            <textarea class="form-input" id="sms-template" rows="3">Bonjour {NOM}, votre RDV chez MediBook CI est confirmé le {DATE} à {HEURE}. Réf: {REF}. Merci!</textarea>
+          </div>
+          <div class="sms-note"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i><span>Le SMS sera envoyé automatiquement après chaque paiement confirmé via l'API CinetPay SMS.</span></div>
+          <button class="btn-save-sms" onclick="saveSMS()"><i class="ti ti-device-floppy"></i> Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div class="view active" id="view-home">
+  <div class="container">
+    <div class="hero">
+      <h1>Prenez rendez-vous en ligne</h1>
+      <p>Consultez les disponibilités des médecins de Bouaké et réservez en 3 minutes. Paiement Mobile Money 100% sécurisé.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>5</strong><span>Médecins</span></div>
+        <div class="hero-stat"><strong>100 F</strong><span>Par RDV</span></div>
+        <div class="hero-stat"><strong>24h</strong><span>Confirmation</span></div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="search-box">
+        <i class="ti ti-search"></i>
+        <input type="text" id="search-input" placeholder="Rechercher un médecin ou spécialité..." oninput="filterDoctors()"/>
+      </div>
+      <select class="filter-select" id="spec-filter" onchange="filterDoctors()">
+        <option value="">Toutes les spécialités</option>
+        <option>Médecin Généraliste</option>
+        <option>Pédiatre</option>
+        <option>Cardiologue</option>
+        <option>Gynécologue</option>
+        <option>Dermatologue</option>
+      </select>
+      <select class="filter-select" id="dispo-filter" onchange="filterDoctors()">
+        <option value="">Disponibilité</option>
+        <option value="yes">Disponible</option>
+        <option value="no">Indisponible</option>
+      </select>
+    </div>
+
+    <div class="doctors-grid" id="doctors-grid"></div>
+  </div>
+</div>
+
+<!-- ===== BOOKING ===== -->
+<div class="view" id="view-booking">
+  <div class="container">
+    <div class="booking-header">
+      <button class="btn-back" onclick="showView('view-home')"><i class="ti ti-arrow-left"></i></button>
+      <div class="page-title">Prendre un rendez-vous</div>
+    </div>
+
+    <div class="steps-bar">
+      <div class="step-item active" id="bs1"><span class="step-num">1</span> Créneau</div>
+      <div class="step-item" id="bs2"><span class="step-num">2</span> Informations</div>
+      <div class="step-item" id="bs3"><span class="step-num">3</span> Paiement</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div id="bstep1">
+      <div class="booking-grid">
+        <div class="card">
+          <div class="cal-header">
+            <div class="cal-title">Mai 2026</div>
+            <div style="display:flex;gap:4px">
+              <button class="cal-nav-btn" disabled>‹</button>
+              <button class="cal-nav-btn">›</button>
+            </div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day-lbl">L</div><div class="cal-day-lbl">M</div><div class="cal-day-lbl">M</div>
+            <div class="cal-day-lbl">J</div><div class="cal-day-lbl">V</div><div class="cal-day-lbl">S</div><div class="cal-day-lbl">D</div>
+            <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div>
+            <div class="cal-day past">1</div><div class="cal-day past">2</div><div class="cal-day past">3</div><div class="cal-day past">4</div>
+            <div class="cal-day past">5</div><div class="cal-day past">6</div><div class="cal-day past">7</div><div class="cal-day past">8</div><div class="cal-day past">9</div><div class="cal-day past">10</div><div class="cal-day past">11</div>
+            <div class="cal-day today available" data-date="12 mai" onclick="pickDay(this)">12</div>
+            <div class="cal-day available" data-date="13 mai" onclick="pickDay(this)">13</div>
+            <div class="cal-day available" data-date="14 mai" onclick="pickDay(this)">14</div>
+            <div class="cal-day available" data-date="15 mai" onclick="pickDay(this)">15</div>
+            <div class="cal-day full">16</div><div class="cal-day past">17</div><div class="cal-day past">18</div>
+            <div class="cal-day available" data-date="19 mai" onclick="pickDay(this)">19</div>
+            <div class="cal-day available" data-date="20 mai" onclick="pickDay(this)">20</div>
+            <div class="cal-day available" data-date="21 mai" onclick="pickDay(this)">21</div>
+            <div class="cal-day available" data-date="22 mai" onclick="pickDay(this)">22</div>
+            <div class="cal-day full">23</div><div class="cal-day past">24</div><div class="cal-day past">25</div>
+            <div class="cal-day available" data-date="26 mai" onclick="pickDay(this)">26</div>
+            <div class="cal-day available" data-date="27 mai" onclick="pickDay(this)">27</div>
+            <div class="cal-day available" data-date="28 mai" onclick="pickDay(this)">28</div>
+            <div class="cal-day available" data-date="29 mai" onclick="pickDay(this)">29</div>
+            <div class="cal-day full">30</div>
+          </div>
+          <div class="legend">
+            <span><span class="ldot" style="background:var(--green-light);border:1px solid var(--teal-light)"></span>Disponible</span>
+            <span><span class="ldot" style="background:var(--gray-light)"></span>Complet</span>
+          </div>
+          <div id="slots-section" style="display:none">
+            <div class="section-lbl">Créneaux — <span id="slots-date-label"></span></div>
+            <div class="slots-grid" id="slots-grid"></div>
+          </div>
+          <button class="btn-secondary" onclick="showView('view-home')">← Retour aux médecins</button>
+          <button class="btn-primary" id="btn-step1-next" disabled onclick="goBookStep(2)">
+            <i class="ti ti-arrow-right"></i> Confirmer le créneau
+          </button>
+        </div>
+        <div class="sidebar-recap" id="sidebar1">
+          <div class="sidebar-title"><i class="ti ti-clipboard-list" style="color:var(--green)"></i> Votre réservation</div>
+          <div class="recap-doc" id="sidebar-doc-info"></div>
+          <div class="recap-row"><span>Date</span><strong id="sb-date">À choisir</strong></div>
+          <div class="recap-row"><span>Heure</span><strong id="sb-heure">À choisir</strong></div>
+          <div class="recap-total">
+            <div class="recap-total-label">Total</div>
+            <div class="recap-total-amount">100 FCFA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="bstep2" style="display:none">
+      <div class="booking-grid">
+        <div class="card">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Prénom *</label><input class="form-input" id="f-prenom" placeholder="Ex : Kouassi" oninput="checkStep2()"/></div>
+            <div class="form-group"><label class="form-label">Nom *</label><input class="form-input" id="f-nom" placeholder="Ex : Aya" oninput="checkStep2()"/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Téléphone *</label><input class="form-input" type="tel" id="f-tel" placeholder="07 00 00 00 00" oninput="checkStep2()"/></div>
+          <div class="form-group"><label class="form-label">Email (facultatif)</label><input class="form-input" type="email" id="f-email" placeholder="votre@email.com"/></div>
+          <div class="form-group"><label class="form-label">Motif de consultation</label><textarea class="form-input" id="f-motif" placeholder="Décrivez brièvement votre motif..."></textarea></div>
+          <button class="btn-secondary" onclick="goBookStep(1)">← Retour</button>
+          <button class="btn-primary" id="btn-step2-next" disabled onclick="goBookStep(3)"><i class="ti ti-arrow-right"></i> Continuer</button>
+        </div>
+        <div class="sidebar-recap">
+          <div class="sidebar-title"><i class="ti ti-clipboard-list" style="color:var(--green)"></i> Votre réservation</div>
+          <div class="recap-doc" id="sidebar-doc-info2"></div>
+          <div class="recap-row"><span>Date</span><strong id="sb-date2">—</strong></div>
+          <div class="recap-row"><span>Heure</span><strong id="sb-heure2">—</strong></div>
+          <div class="recap-total">
+            <div class="recap-total-label">Total</div>
+            <div class="recap-total-amount">100 FCFA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="bstep3" style="display:none">
+      <div class="booking-grid">
+        <div class="card">
+          <div class="section-lbl">Choisir votre opérateur Mobile Money</div>
+          <div class="pay-methods">
+            <div class="pay-card" id="pay-orange" onclick="selectOperator('orange')">
+              <div class="pay-icon">🟠</div>
+              <div class="pay-name">Orange Money</div>
+              <div class="pay-sub">Paiement instantané</div>
+              <div class="pay-ussd">*144#</div>
+            </div>
+            <div class="pay-card" id="pay-mtn" onclick="selectOperator('mtn')">
+              <div class="pay-icon">🟡</div>
+              <div class="pay-name">MTN MoMo</div>
+              <div class="pay-sub">Paiement instantané</div>
+              <div class="pay-ussd">*133#</div>
+            </div>
+          </div>
+          <div id="pay-form-wrap" style="display:none">
+            <div class="form-group">
+              <label class="form-label">Numéro Mobile Money *</label>
+              <div class="phone-row">
+                <div class="prefix">+225</div>
+                <input class="form-input" type="tel" id="f-momo" placeholder="07 00 00 00 00" oninput="checkStep3()" style="flex:1"/>
+              </div>
+            </div>
+            <div class="info-banner"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i><span>Une notification de paiement de <strong>100 FCFA</strong> sera envoyée sur votre téléphone. Validez pour confirmer le RDV.</span></div>
+            <div class="sms-note"><i class="ti ti-message" style="font-size:15px;flex-shrink:0"></i><span>Un SMS de confirmation sera envoyé automatiquement sur votre numéro après paiement.</span></div>
+          </div>
+          <button class="btn-secondary" onclick="goBookStep(2)">← Retour</button>
+          <button class="btn-primary" id="btn-pay-final" disabled onclick="processPay()">
+            <i class="ti ti-shield-check"></i> Payer 100 FCFA et confirmer le RDV
+          </button>
+        </div>
+        <div class="sidebar-recap">
+          <div class="sidebar-title"><i class="ti ti-receipt" style="color:var(--green)"></i> Résumé de commande</div>
+          <div class="recap-doc" id="sidebar-doc-info3"></div>
+          <div class="recap-row"><span>Date</span><strong id="sb-date3">—</strong></div>
+          <div class="recap-row"><span>Heure</span><strong id="sb-heure3">—</strong></div>
+          <div class="recap-row"><span>Patient</span><strong id="sb-patient">—</strong></div>
+          <div class="recap-row" style="border-top:1px solid var(--gray-light);padding-top:8px;margin-top:4px"><span>Frais de service</span><strong>0 FCFA</strong></div>
+          <div class="recap-total">
+            <div class="recap-total-label"><i class="ti ti-lock" style="font-size:13px"></i> Total sécurisé</div>
+            <div class="recap-total-amount">100 FCFA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUCCESS ===== -->
+<div class="view" id="view-success">
+  <div class="container">
+    <div class="success-wrap">
+      <div class="success-icon"><i class="ti ti-check"></i></div>
+      <div class="success-title">Rendez-vous confirmé !</div>
+      <div class="success-sub">Votre paiement a été reçu. Un SMS de confirmation a été envoyé sur votre numéro.</div>
+      <div class="confirm-card">
+        <div class="confirm-row"><i class="ti ti-user-check"></i><span id="success-doc">—</span></div>
+        <div class="confirm-row"><i class="ti ti-calendar"></i><span id="success-date">—</span></div>
+        <div class="confirm-row"><i class="ti ti-clock"></i><span id="success-heure">—</span></div>
+        <div class="confirm-row"><i class="ti ti-user"></i><span id="success-patient">—</span></div>
+        <div class="confirm-row"><i class="ti ti-device-mobile"></i><span id="success-phone">—</span></div>
+        <div class="confirm-row"><i class="ti ti-coin"></i><span>100 FCFA payés via Mobile Money</span></div>
+        <div class="confirm-row"><i class="ti ti-message"></i><span>SMS de confirmation envoyé</span></div>
+      </div>
+      <div class="ref-box">
+        <div class="ref-label">Référence de réservation</div>
+        <div class="ref-code" id="success-ref">—</div>
+      </div>
+      <button class="btn-primary" onclick="showView('view-home')" style="max-width:280px;margin:0 auto">
+        <i class="ti ti-plus"></i> Prendre un autre rendez-vous
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const DOCTORS = [
+  {id:1,initials:'KA',color:'#E1F5EE',textColor:'#085041',name:'Dr. Konan Djidji Armand',spec:'Médecin Généraliste',lieu:'CHU de Bouaké',rating:4.8,reviews:127,dispo:true,duree:'20 min',tags:['Généraliste','Adultes'],},
+  {id:2,initials:'TD',color:'#E6F1FB',textColor:'#042C53',name:'Dr. Touré Djeneba',spec:'Pédiatre',lieu:'Clinique Saint-Joseph, Bouaké',rating:4.9,reviews:89,dispo:true,duree:'30 min',tags:['Pédiatrie','Enfants'],},
+  {id:3,initials:'OM',color:'#FAEEDA',textColor:'#412402',name:'Dr. Ouattara Mohamed',spec:'Cardiologue',lieu:'Polyclinique du Centre, Bouaké',rating:4.7,reviews:64,dispo:true,duree:'45 min',tags:['Cardiologie','Adultes'],},
+  {id:4,initials:'YA',color:'#FBEAF0',textColor:'#4B1528',name:'Dr. Yao Affoué Christelle',spec:'Gynécologue',lieu:'CHU de Bouaké',rating:4.9,reviews:153,dispo:false,duree:'40 min',tags:['Gynécologie','Femmes'],},
+  {id:5,initials:'BK',color:'#EAF3DE',textColor:'#173404',name:'Dr. Bamba Karim',spec:'Dermatologue',lieu:'Cabinet Médical Kossou, Bouaké',rating:4.6,reviews:42,dispo:true,duree:'25 min',tags:['Dermatologie','Adultes'],},
+];
+
+const SLOTS_BY_DATE = {
+  '12 mai':['08h00','08h20','09h00','09h20','10h00','Complet','11h00','11h20'],
+  '13 mai':['08h00','08h20','09h00','09h20','10h00','10h20','11h00','11h20'],
+  '14 mai':['08h00','Complet','09h20','10h00','10h20','11h00','14h00','14h20'],
+  '15 mai':['08h00','08h20','09h00','09h20','10h00','Complet','11h20','14h00'],
+  '19 mai':['08h00','08h20','09h00','09h20','10h00','10h20','11h00','11h20'],
+  '20 mai':['08h00','08h20','09h00','Complet','10h00','10h20','11h00','14h00'],
+  '21 mai':['08h00','08h20','09h00','09h20','10h00','10h20','11h00','11h20'],
+  '22 mai':['08h00','08h20','09h00','09h20','10h00','10h20','Complet','14h00'],
+  '26 mai':['08h00','08h20','09h00','09h20','10h00','10h20','11h00','11h20'],
+  '27 mai':['08h00','08h20','09h00','09h20','10h00','10h20','11h00','11h20'],
+  '28 mai':['08h00','Complet','09h20','10h00','10h20','11h00','11h20','14h00'],
+  '29 mai':['08h00','08h20','09h00','09h20','Complet','10h20','11h00','14h00'],
+};
+
+// ===== STATE =====
+let state = {
+  currentDoc: null,
+  selectedDate: '',
+  selectedHeure: '',
+  selectedOperator: '',
+  rdvList: [],
+  docEnabled: {1:true,2:true,3:true,4:false,5:true},
+};
+
+// ===== INIT =====
+renderDoctors(DOCTORS);
+renderAdminDocs();
+renderRevenueBars();
+
+function renderDoctors(docs){
+  const grid = document.getElementById('doctors-grid');
+  grid.innerHTML = docs.length === 0
+    ? '<p style="color:var(--muted);font-size:14px;grid-column:1/-1;text-align:center;padding:40px 0">Aucun médecin trouvé.</p>'
+    : docs.map(d=>`
+    <div class="doctor-card" onclick="startBooking(${d.id})">
+      <div class="doc-avatar" style="background:${d.color};color:${d.textColor}">${d.initials}</div>
+      <div class="doc-name">${d.name}</div>
+      <div class="doc-spec">${d.spec} · ${d.lieu}</div>
+      <div class="doc-tags">
+        ${d.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+        <span class="tag orange"><i class="ti ti-clock" style="font-size:11px"></i> ${d.duree}</span>
+      </div>
+      <div class="doc-footer">
+        <div class="doc-rating"><i class="ti ti-star-filled" style="color:#F59E0B;font-size:13px"></i> ${d.rating} (${d.reviews} avis)</div>
+        <span class="badge-dispo ${d.dispo&&state.docEnabled[d.id]?'yes':'no'}">${d.dispo&&state.docEnabled[d.id]?'Disponible':'Indisponible'}</span>
+      </div>
+      <div style="margin-top:8px"><span class="doc-price">100 FCFA / RDV</span></div>
+    </div>`).join('');
+}
+
+function filterDoctors(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const spec = document.getElementById('spec-filter').value;
+  const dispo = document.getElementById('dispo-filter').value;
+  const filtered = DOCTORS.filter(d=>{
+    const matchQ = !q || d.name.toLowerCase().includes(q) || d.spec.toLowerCase().includes(q);
+    const matchS = !spec || d.spec === spec;
+    const matchD = !dispo || (dispo==='yes'?d.dispo&&state.docEnabled[d.id]:!d.dispo||!state.docEnabled[d.id]);
+    return matchQ && matchS && matchD;
+  });
+  renderDoctors(filtered);
+}
+
+function startBooking(id){
+  const doc = DOCTORS.find(d=>d.id===id);
+  if(!doc||(doc.dispo===false&&!state.docEnabled[id]))return;
+  if(!state.docEnabled[id]){alert('Ce médecin est actuellement indisponible.');return;}
+  state.currentDoc = doc;
+  state.selectedDate = '';
+  state.selectedHeure = '';
+  state.selectedOperator = '';
+  document.querySelectorAll('#view-booking .cal-day').forEach(d=>d.classList.remove('selected'));
+  document.getElementById('slots-section').style.display='none';
+  document.getElementById('btn-step1-next').disabled=true;
+  document.getElementById('pay-form-wrap').style.display='none';
+  document.getElementById('btn-pay-final').disabled=true;
+  document.getElementById('pay-orange').classList.remove('selected');
+  document.getElementById('pay-mtn').classList.remove('selected');
+  document.getElementById('f-prenom').value='';
+  document.getElementById('f-nom').value='';
+  document.getElementById('f-tel').value='';
+  document.getElementById('f-email').value='';
+  document.getElementById('f-motif').value='';
+  document.getElementById('f-momo').value='';
+  renderSidebarDoc();
+  goBookStep(1);
+  showView('view-booking');
+}
+
+function renderSidebarDoc(){
+  const d = state.currentDoc;
+  if(!d)return;
+  const html = `
+    <div class="recap-doc-avatar" style="background:${d.color};color:${d.textColor}">${d.initials}</div>
+    <div><div style="font-size:14px;font-weight:500">${d.name}</div><div style="font-size:12px;color:var(--muted)">${d.spec}</div></div>`;
+  ['sidebar-doc-info','sidebar-doc-info2','sidebar-doc-info3'].forEach(id=>{
+    document.getElementById(id).innerHTML=html;
+  });
+}
+
+// ===== CALENDAR =====
+function pickDay(el){
+  if(el.classList.contains('past')||el.classList.contains('full'))return;
+  document.querySelectorAll('#view-booking .cal-day').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedDate = el.dataset.date;
+  state.selectedHeure = '';
+  document.getElementById('btn-step1-next').disabled=true;
+  document.getElementById('sb-date').textContent = state.selectedDate;
+  document.getElementById('sb-heure').textContent = 'À choisir';
+  const sec = document.getElementById('slots-section');
+  sec.style.display='block';
+  document.getElementById('slots-date-label').textContent = state.selectedDate;
+  const grid = document.getElementById('slots-grid');
+  const slots = SLOTS_BY_DATE[state.selectedDate] || [];
+  grid.innerHTML = slots.map(h=>`
+    <div class="slot${h==='Complet'?' full':''}" onclick="${h!=='Complet'?`pickSlot(this,'${h}')`:''}">${h}</div>`).join('');
+}
+
+function pickSlot(el,h){
+  document.querySelectorAll('.slot').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedHeure = h;
+  document.getElementById('sb-heure').textContent = h;
+  document.getElementById('btn-step1-next').disabled = false;
+}
+
+// ===== BOOKING STEPS =====
+function goBookStep(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById('bstep'+i).style.display = i===n?'block':'none';
+    const si = document.getElementById('bs'+i);
+    si.classList.remove('active','done');
+    if(i<n)si.classList.add('done');
+    if(i===n)si.classList.add('active');
+  });
+  if(n===2){
+    document.getElementById('sb-date2').textContent=state.selectedDate;
+    document.getElementById('sb-heure2').textContent=state.selectedHeure;
+    renderSidebarDoc();
+  }
+  if(n===3){
+    document.getElementById('sb-date3').textContent=state.selectedDate;
+    document.getElementById('sb-heure3').textContent=state.selectedHeure;
+    document.getElementById('sb-patient').textContent=
+      (document.getElementById('f-prenom').value+' '+document.getElementById('f-nom').value).trim();
+    renderSidebarDoc();
+  }
+}
+
+function checkStep2(){
+  const ok = document.getElementById('f-prenom').value.trim()&&
+             document.getElementById('f-nom').value.trim()&&
+             document.getElementById('f-tel').value.trim();
+  document.getElementById('btn-step2-next').disabled=!ok;
+}
+
+function selectOperator(op){
+  state.selectedOperator=op;
+  document.getElementById('pay-orange').classList.toggle('selected',op==='orange');
+  document.getElementById('pay-mtn').classList.toggle('selected',op==='mtn');
+  document.getElementById('pay-form-wrap').style.display='block';
+  checkStep3();
+}
+
+function checkStep3(){
+  const num=document.getElementById('f-momo').value.trim();
+  document.getElementById('btn-pay-final').disabled=!state.selectedOperator||num.length<8;
+}
+
+function processPay(){
+  showLoading('Traitement du paiement Mobile Money...');
+  setTimeout(()=>{
+    hideLoading();
+    const ref='MBK-'+Math.random().toString(36).substr(2,6).toUpperCase();
+    const prenom=document.getElementById('f-prenom').value;
+    const nom=document.getElementById('f-nom').value;
+    const tel=document.getElementById('f-tel').value;
+    const momo=document.getElementById('f-momo').value;
+    const op=state.selectedOperator==='orange'?'Orange Money':'MTN MoMo';
+
+    // Save RDV
+    const rdv={
+      ref,prenom,nom,tel,momo,op,
+      doc:state.currentDoc.name,
+      date:state.selectedDate,
+      heure:state.selectedHeure,
+      status:'paid',
+      ts:new Date().toLocaleTimeString('fr',{hour:'2-digit',minute:'2-digit'}),
+    };
+    state.rdvList.unshift(rdv);
+    updateAdminStats();
+
+    // Success
+    document.getElementById('success-doc').textContent=state.currentDoc.name+' ('+state.currentDoc.spec+')';
+    document.getElementById('success-date').textContent=state.selectedDate;
+    document.getElementById('success-heure').textContent=state.selectedHeure;
+    document.getElementById('success-patient').textContent=prenom+' '+nom;
+    document.getElementById('success-phone').textContent='+225 '+momo+' ('+op+')';
+    document.getElementById('success-ref').textContent=ref;
+    showView('view-success');
+  },2200);
+}
+
+// ===== VIEWS =====
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('main-nav').style.display = (id==='view-admin'||id==='view-login')?'none':'flex';
+  window.scrollTo(0,0);
+}
+
+// ===== ADMIN =====
+function showLogin(){showView('view-login');}
+function doLogin(){
+  const u=document.getElementById('login-user').value;
+  const p=document.getElementById('login-pass').value;
+  if(u==='admin'&&p==='medibook2024'){
+    document.getElementById('login-err').style.display='none';
+    showView('view-admin');
+    updateAdminStats();
+    renderAdminRdvList();
+  }else{
+    document.getElementById('login-err').style.display='block';
+  }
+}
+
+function updateAdminStats(){
+  document.getElementById('stat-rdv-today').textContent=state.rdvList.length;
+  document.getElementById('stat-revenus').textContent=(state.rdvList.length*100).toLocaleString();
+  document.getElementById('stat-patients').textContent=state.rdvList.length;
+  renderRevenueBars();
+  renderAdminRdvList();
+}
+
+function renderAdminRdvList(){
+  const el=document.getElementById('admin-rdv-list');
+  if(state.rdvList.length===0){
+    el.innerHTML='<p style="font-size:13px;color:var(--muted);text-align:center;padding:20px 0">Aucun rendez-vous pour l\'instant.</p>';
+    return;
+  }
+  el.innerHTML=state.rdvList.slice(0,6).map(r=>{
+    const doc=DOCTORS.find(d=>d.name===r.doc);
+    return`<div class="rdv-item">
+      <div class="rdv-avatar" style="background:${doc?doc.color:'#E1F5EE'};color:${doc?doc.textColor:'#085041'}">${r.prenom[0]}${r.nom[0]}</div>
+      <div class="rdv-info">
+        <div class="rdv-name">${r.prenom} ${r.nom}</div>
+        <div class="rdv-detail">${r.doc} · ${r.date} à ${r.heure}</div>
+      </div>
+      <span class="rdv-status paid"><i class="ti ti-check" style="font-size:11px"></i> Payé</span>
+    </div>`;
+  }).join('');
+}
+
+function renderAdminDocs(){
+  const el=document.getElementById('admin-doc-list');
+  el.innerHTML=DOCTORS.map(d=>`
+    <div class="doc-admin-item">
+      <div class="doc-admin-avatar" style="background:${d.color};color:${d.textColor}">${d.initials}</div>
+      <div class="doc-admin-info">
+        <div class="doc-admin-name">${d.name}</div>
+        <div class="doc-admin-spec">${d.spec}</div>
+      </div>
+      <div class="toggle-wrap">
+        <span style="font-size:11px;color:var(--muted)">${state.docEnabled[d.id]?'Actif':'Inactif'}</span>
+        <label class="toggle">
+          <input type="checkbox" ${state.docEnabled[d.id]?'checked':''} onchange="toggleDoc(${d.id},this)"/>
+          <span class="slider-tog"></span>
+        </label>
+      </div>
+    </div>`).join('');
+}
+
+function toggleDoc(id,checkbox){
+  state.docEnabled[id]=checkbox.checked;
+  const item=checkbox.closest('.doc-admin-item').querySelector('.doc-admin-spec~.toggle-wrap span');
+  if(item)item.textContent=checkbox.checked?'Actif':'Inactif';
+  filterDoctors();
+}
+
+function renderRevenueBars(){
+  const el=document.getElementById('revenue-bars');
+  const rdvByDoc={};
+  DOCTORS.forEach(d=>rdvByDoc[d.name]=0);
+  state.rdvList.forEach(r=>{if(rdvByDoc[r.doc]!==undefined)rdvByDoc[r.doc]++;});
+  const max=Math.max(...Object.values(rdvByDoc),1);
+  el.innerHTML=DOCTORS.map(d=>{
+    const count=rdvByDoc[d.name]||0;
+    const pct=Math.round((count/max)*100);
+    return`<div class="rev-row">
+      <div class="rev-label" style="font-size:11px">${d.name.split(' ').slice(0,2).join(' ')}</div>
+      <div class="rev-bar-wrap"><div class="rev-bar" style="width:${pct}%"></div></div>
+      <div class="rev-amount">${(count*100)} F</div>
+    </div>`;
+  }).join('');
+}
+
+function saveSMS(){
+  showLoading('Enregistrement de la configuration SMS...');
+  setTimeout(()=>{hideLoading();alert('Configuration SMS enregistrée avec succès !');},1000);
+}
+
+function showLoading(msg){
+  document.getElementById('loading-msg').textContent=msg||'Chargement...';
+  document.getElementById('loading').style.display='flex';
+}
+function hideLoading(){document.getElementById('loading').style.display='none';}
+</script>
+</body>
+</html>
